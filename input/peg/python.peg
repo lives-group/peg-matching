@@ -1,0 +1,65 @@
+file <- (blank* newline)* statement+
+
+-- TODO: Será que faz sentido isso? Um comentário ser uma declaração?
+statement <- (compound / simple / comment) blank* newline*
+
+compound <- function_def / if_stmt / while_stmt / for_stmt
+
+function_def <- ("def" space identifier "(" space id_list? ")" space ":") > statement
+if_stmt      <- (("if" space expression ":") > statement) (elif_block / else_block)?
+elif_block   <- (("elif" space expression ":") > statement) (elif_block / else_block)?
+else_block   <- ("else" space ":") > statement
+
+while_stmt   <- ("while" space expression space ":") > statement
+for_stmt     <- ("for" space identifier space "in" space expression ":") > statement
+
+simple <- import_stmt / assignment / return_stmt / expression
+return_stmt <- "return" space expr_list
+import_stmt <- simple_import / from_import
+simple_import <- "import" space identifier
+from_import <- "from" space identifier space "import" space (id_list / "*")
+
+assignment <- id_list space attr space expression
+attr       <- "=" / "+=" / "-=" / "*=" / "/="
+
+expression <- or_expr ("or" space or_expr)*
+or_expr    <- and_expr ("and" space and_expr)*
+and_expr   <- "not" space comparison / comparison
+comparison <- sum (op_comp sum)*
+sum        <- term (op_term term)* 
+term       <- factor (op_factor factor)*
+factor     <- power (op_power power)*
+power      <- "-" neg / neg
+neg        <- primary space / "(" space expression ")" space
+
+op_comp   <- ("==" / "!=" / "<=" / ">=" / "<" / ">") space
+op_term   <- ("+" / "-") space
+op_factor <- ("*" / "/" / "%") space
+op_power  <- "**" space
+
+primary <- function_call / array_access / "[" items? "]" / atom
+function_call <- identifier space "(" space expr_list? ")" ("." primary)?
+-- function_call <- identifier "(" expr_list? ")"
+array_access <- identifier space "[" space expression "]" ("." primary)?
+
+atom      <- "True" / "False" / "None" / number / strings / identifier
+expr_list <- expr1 space (sep expr1 space)*
+expr1     <- (single_id space "=" space)? expression
+items     <- expression (sep expression space)*
+id_list   <- identifier space (sep identifier space)*
+
+sep <- "," space
+
+^strings <- fstring / string
+fstring <- "f" string
+string  <- ['] (!['] char)* ['] / ["] (!["] char)* ["]
+-- TODO: Fazer uma forma mais fácil
+char    <- [a-zA-Z0-9 :{}.,;^+-*/%()_!?áéúçã] / "[" / "]"
+
+^identifier <- single_id ("." single_id)*
+single_id   <- [a-zA-Z] [a-zA-Z0-9_]*
+^number     <- [0-9]+
+space       <- " "*
+^blank       <- comment / " "
+^comment    <- "#" char*
+^newline    <- "\r\n" / "\r" / "\n"
