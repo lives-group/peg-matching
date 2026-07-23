@@ -73,8 +73,8 @@ You may build the project either locally or using Docker.
 First, clone the repository:
 
 ```bash
-git clone https://github.com/guinasc2/ast-pattern-matching
-cd syntax-pattern
+git clone [https://github.com/guinasc2/ast-pattern-matching](https://github.com/lives-group/peg-matching)
+cd peg-matching
 ```
 
 After this, you may build using Cabal:
