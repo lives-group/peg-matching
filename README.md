@@ -73,7 +73,7 @@ You may build the project either locally or using Docker.
 First, clone the repository:
 
 ```bash
-git clone [https://github.com/guinasc2/ast-pattern-matching](https://github.com/lives-group/peg-matching)
+git clone https://github.com/lives-group/peg-matching
 cd peg-matching
 ```
 
