@@ -19,6 +19,12 @@ import qualified Parser.Pattern as Pattern
 import Language.Haskell.TH (runIO)
 import Language.Haskell.TH.Quote (dataToExpQ, QuasiQuoter(..))
 
+{-|
+QuasiQuoter for pattern syntax.
+
+Parses a pattern string at compile time and converts it into a Template
+Haskell expression.
+-}
 patterns :: QuasiQuoter
 patterns = QuasiQuoter {
         quoteExp = \ str -> do

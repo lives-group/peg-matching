@@ -118,6 +118,29 @@ let patternsResult = parseValidPatterns grammarString patternString
 let matchResult = parseMatch grammarString patternString inputString
 ```
 
+### QuasiQuoters
+
+This library also exposes compile-time QuasiQuoters for PEG grammars and patterns.
+Use `Quote.Peg.grammar` to embed a PEG definition directly in Haskell source, and
+`Quote.Pattern.patterns` to embed pattern definitions.
+
+Example:
+
+```haskell
+import qualified Quote.Peg as QPeg
+import qualified Quote.Pattern as QPattern
+
+myGrammar :: Grammar
+myGrammar = [QPeg.grammar|
+    S <- "a" S / "b"
+|]
+
+myPatterns :: [NamedSynPat]
+myPatterns = [QPattern.patterns|
+    pattern example : S := "a" (S := "b")
+|]
+```
+
 ### File-based Pipeline Functions
 
 Most pipeline functions also have `IO` variants that accept file paths instead of raw 
@@ -150,7 +173,7 @@ And then load the pipeline module:
 #### Example 1 - Parsing a file: 
 Run
 ```bash
-parseFileIO "input/peg/expressao.peg" "input/file/expressao.txt" True
+parseFileIO "input/peg/expression.peg" "input/file/expression.txt" True
 ```
 
 The ```parseFileIO``` function takes as arguments two files and a boolean. The first is a 
@@ -212,7 +235,7 @@ Run
 parseMatch1IO "input/peg/python.peg" "input/pattern/factorial.pat" "input/file/fact_math.py" "factorial_call"
 ```
 
-The ```parseCallGraphIO``` function takes as arguments three files and one string. The files
+The ```parseMatch1IO``` function takes as arguments three files and one string. The files
 are the PEG file, pattern file and input file, respectively. The string is an identifiers for 
 any pattern inside the pattern file. In this case, ```factorial_call``` is a pattern that 
 matches with calls to functions named ```math.factorial```.

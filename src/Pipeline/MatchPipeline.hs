@@ -215,6 +215,13 @@ parseRewrite contentsG contentsP contentsF name1 name2 =
         ps = parseCorrectPatterns contentsG contentsP
         f = parseFile contentsG contentsF
 
+{-|
+Builds a call graph from matches of two named patterns in an AST.
+
+The first pattern is treated as a definition pattern and the second pattern as
+a call pattern. The result is a list of definition/call pairs.
+@since 1.0.0
+-}
 parseCallGraph :: String -> String -> String -> String -> String -> Either PrettyError [(ParsedTree, ParsedTree)]
 parseCallGraph contentsG contentsP contentsF defPat callPat =
     case (g, ps, f) of
@@ -335,69 +342,6 @@ parseFileIO grammarFile inputFile flat = do
         Left e -> putStrLn e
         Right t -> putStrLn $ if flat then flatten t else show (pPrint t)
 
-parseMultFileIO :: FilePath -> FilePath -> FilePath -> Int -> IO ()
-parseMultFileIO grammarFile inputFiles output n = do
-    contentsG <- readFile grammarFile
-    contentsF <- readFile inputFiles
-    let files = take n $ lines contentsF
-    writeFile ("output/" ++ output ++ "-ok.txt") ""
-    writeFile ("output/" ++ output ++ "-falho.txt") ""
-    mapM_ (parseSingle contentsG output) files
-    putStrLn $ "Terminou " ++ output
-
-parseSingle :: String -> FilePath  -> FilePath -> IO ()
-parseSingle grammar output input = do
-    contents <- readFile input
-    case parseFile grammar contents of
-        Left _ ->
-            -- appendFile ("output/" ++ output ++ "-falho.txt") (input ++ ": arquivo inválido\n")
-            appendFile ("output/" ++ output ++ "-falho.txt") (input ++ "\n")
-        Right _ ->
-            -- appendFile ("output/" ++ output ++ "-ok.txt") (input ++ ": ok\n")
-            appendFile ("output/" ++ output ++ "-ok.txt") (input ++ "\n")
-
--- parseTarefas :: FilePath -> Int -> IO ()
--- parseTarefas t = parseMultFileIO ("input/peg/"++t++".peg") ("input/entregas-"++t++".txt") t
-parseTarefas :: IO ()
-parseTarefas = do
-    parseMultFileIO "input/peg/tarefa1.peg"  "input/entregas/entregas-tarefa1.txt"  "tarefa1"  5000
-    parseMultFileIO "input/peg/tarefa1.peg"  "input/entregas/entregas-tarefa2.txt"  "tarefa2"  5000
-    parseMultFileIO "input/peg/tarefa3.peg"  "input/entregas/entregas-tarefa3.txt"  "tarefa3"  5000
-    parseMultFileIO "input/peg/tarefa4.peg"  "input/entregas/entregas-tarefa4.txt"  "tarefa4"  5000
-    parseMultFileIO "input/peg/tarefa4.peg"  "input/entregas/entregas-tarefa5.txt"  "tarefa5"  5000
-    parseMultFileIO "input/peg/tarefa6.peg"  "input/entregas/entregas-tarefa6.txt"  "tarefa6"  5000
-    parseMultFileIO "input/peg/tarefa7.peg"  "input/entregas/entregas-tarefa7.txt"  "tarefa7"  5000
-    parseMultFileIO "input/peg/tarefa7.peg"  "input/entregas/entregas-tarefa8.txt"  "tarefa8"  5000
-    parseMultFileIO "input/peg/tarefa7.peg"  "input/entregas/entregas-tarefa9.txt"  "tarefa9"  5000
-    parseMultFileIO "input/peg/tarefa10.peg" "input/entregas/entregas-tarefa10.txt" "tarefa10" 5000
-    parseMultFileIO "input/peg/tarefa10.peg" "input/entregas/entregas-tarefa11.txt" "tarefa11" 5000
-    parseMultFileIO "input/peg/tarefa12.peg" "input/entregas/entregas-tarefa12.txt" "tarefa12" 5000
-    parseMultFileIO "input/peg/tarefa12.peg" "input/entregas/entregas-tarefa13.txt" "tarefa13" 5000
-    parseMultFileIO "input/peg/tarefa12.peg" "input/entregas/entregas-tarefa14.txt" "tarefa14" 5000
-    parseMultFileIO "input/peg/tarefa12.peg" "input/entregas/entregas-tarefa15.txt" "tarefa15" 5000
-    parseMultFileIO "input/peg/tarefa12.peg" "input/entregas/entregas-tarefa16.txt" "tarefa16" 5000
-    -- parseMultFileIO "input/peg/tarefa17.peg" "input/entregas/entregas-tarefa17.txt" "tarefa17" 5000
-
-parseFactorialIO :: FilePath -> FilePath -> FilePath -> String -> Int -> IO ()
-parseFactorialIO grammarFile patternFile inputFiles pat n = do
-    contentsG <- readFile grammarFile
-    contentsP <- readFile patternFile
-    contentsF <- readFile inputFiles
-    let files = take n $ lines contentsF
-    mapM_ (parseSingleFactorial contentsG contentsP pat) files
-
-parseSingleFactorial :: String -> String -> String -> FilePath -> IO ()
-parseSingleFactorial grammar patterns pat input = do
-    contents <- readFile input
-    case parseFile grammar contents of
-        Left _ -> putStrLn $ input ++ " -> Arquivo inválido"
-        -- Left _ -> return ()
-        Right _ ->
-            case parseMatch1 grammar patterns contents pat of
-                Left e -> putStrLn e
-                Right b -> putStrLn $ input ++ " -> " ++ pat ++ (if b then ": match!" else ": not match!")
-                -- Right b -> if b then return () else putStrLn $ input ++ " -> " ++ pat ++ ": not match!"
-
 {-|
 Checks pattern matching in an AST and prints the results.
 
@@ -477,6 +421,13 @@ parseRewriteIO grammarFile patternFile inputFile pat1 pat2 = do
         Left e -> putStrLn e
         Right t -> putStrLn $ flatten t
 
+{-|
+Builds and prints a call graph for two named patterns from files.
+
+The first pattern is interpreted as a definition pattern and the second as a
+call pattern. Output is printed as `definition -> call` pairs.
+@since 1.0.0
+-}
 parseCallGraphIO :: FilePath -> FilePath -> FilePath -> String -> String -> IO ()
 parseCallGraphIO grammarFile patternFile inputFile pat1 pat2 = do
     contentsG <- readFile grammarFile
@@ -486,6 +437,11 @@ parseCallGraphIO grammarFile patternFile inputFile pat1 pat2 = do
         Left e -> putStrLn e
         Right t -> putStrLn $ concat . nub $ map (\ (x, y) -> flatten x ++ " -> " ++ flatten y ++ "\n") t
 
+{-|
+A sample grammar for arithmetic expressions used in examples and tests.
+
+This grammar is the same as the one in `input/peg/expression.peg`.
+-}
 testGrammar :: Grammar
 testGrammar = [QPeg.grammar|
     E <- T ("+" T)*
@@ -494,11 +450,21 @@ testGrammar = [QPeg.grammar|
     ^n <- [0-9]+
     |]
 
+{-|
+A sample grammar for palindrome-like strings used in examples and tests.
+
+This grammar is the same as the one in `input/peg/wiki.peg`.
+-}
 testGrammar2 :: Grammar
 testGrammar2 = [QPeg.grammar|
     S <- "x" S "x" / "x"
     |]
 
+{-|
+A sample set of named syntactic patterns used in examples and tests.
+
+These patterns are the same as the ones in `input/pattern/call_graph.pat`.
+-}
 testPattern :: [NamedSynPat]
 testPattern = [QPattern.patterns|
     pattern call : function_call := #name:identifier @space "(" @space #v:(expr_list?) ")" ε

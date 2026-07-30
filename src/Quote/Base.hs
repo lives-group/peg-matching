@@ -29,15 +29,27 @@ import Language.Haskell.TH
     (Q, location, Loc(loc_start, loc_filename))
 import Control.Exception (throwIO)
 
+{-|
+Parses a parser from the beginning of input and requires that the parser
+consumes all remaining whitespace and reaches end of file.
+-}
 topLevel :: Parser a -> Parser a
 topLevel p = sc *> p <* eof
 
+{-|
+Parse a string using the provided parser and raise an IO exception on parse
+failure.
+-}
 parseIO :: Parser a -> String -> IO a
 parseIO p str =
     case parse p "" str of
         Left err -> throwIO (userError (errorBundlePretty err))
         Right a  -> return a
 
+{-|
+Return the current Template Haskell source position as a Megaparsec
+'SourcePos'.
+-}
 location' :: Q SourcePos
 location' = aux <$> location
     where
@@ -50,6 +62,9 @@ location' = aux <$> location
             ,   sourceColumn = mkPos col 
             }
 
+{-|
+Set the parser state position to the given 'SourcePos'.
+-}
 setPosition :: SourcePos -> Parser ()
 setPosition pos = updateParserState $ \state ->
     let pst = statePosState state

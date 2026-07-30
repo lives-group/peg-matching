@@ -41,6 +41,7 @@ A 'ParsedTree' can be:
 - 'ParsedChoiceRight': Represents the right choice in a choice operation.
 - 'ParsedStar': Represents a repetition of zero or more times of a tree.
 - 'ParsedNot': Represents the negation of a tree.
+- 'ParsedIndent': Represents that a list of trees must be indented with respect to another tree.
 
 @since 1.0.0
 -}
@@ -56,6 +57,13 @@ data ParsedTree
     | ParsedIndent ParsedTree [ParsedTree]
     deriving (Show, Typeable, Data)
 
+{-|
+Breadcrumbs used to reconstruct the parent context while navigating a
+'ParsedTree' with a zipper.
+
+Each constructor records the information required to rebuild the tree when
+moving back up from the current focus.
+-}
 data ParsedTreeCrumbs
     = ParsedNTCrumb NonTerminal
     | ParsedSeqFirst ParsedTree
@@ -66,10 +74,24 @@ data ParsedTreeCrumbs
     | ParsedIndentFirst [ParsedTree]
     | ParsedIndentSecond ParsedTree
 
+{-|
+A zipper path is the list of breadcrumbs representing the current position
+inside a 'ParsedTree'. The most recent breadcrumb is at the head of the list.
+-}
 type ParsedTreePath = [ParsedTreeCrumbs]
 
+{-|
+A zipper for a parsed tree. The first component is the current focus, and the
+second component is the path back to the root.
+-}
 type ParsedTreeZipper = (ParsedTree, ParsedTreePath)
 
+{-|
+Move the focus of a 'ParsedTreeZipper' up to its parent node, if possible.
+
+This reconstructs the parent node from the current focus and the breadcrumb
+stored in the zipper path.
+-}
 goUp :: ParsedTreeZipper -> Maybe ParsedTreeZipper
 goUp (t, ParsedNTCrumb nt:z)                 = Just (ParsedNT nt t, z)
 goUp (t, ParsedSeqFirst t':z)                = Just (ParsedSeq t t', z)
@@ -87,6 +109,11 @@ goUp (_, [])                                 = Nothing
 -- TODO:
 -- goLeft, goRight e goDown não dão muito bem quando tentam acessar esquerda e direita
 -- de uma árvore que está dentro de uma lista, pois a preferência é por andar na lista.
+
+{-|
+Move the focus down into a child subtree, when the current focus is a node
+that contains a single child or a non-empty star list.
+-}
 goDown :: ParsedTreeZipper -> Maybe ParsedTreeZipper
 goDown (ParsedNT nt t, z)       = Just (t, ParsedNTCrumb nt:z)
 goDown (ParsedChoiceLeft t, z)  = Just (t, ParsedChoiceLeftCrumb:z)
@@ -95,6 +122,12 @@ goDown (ParsedStar [], _)       = Nothing
 goDown (ParsedStar (t:ts), z)   = Just (t, ParsedStarCrumb ts []:z)
 goDown _                        = Nothing
 
+{-|
+Move the focus left within the current zipper context.
+
+This is valid for star lists, sequence nodes, and indent nodes where a
+left sibling exists.
+-}
 goLeft :: ParsedTreeZipper -> Maybe ParsedTreeZipper
 goLeft (_, (ParsedStarCrumb _ []):_)         = Nothing
 goLeft (t, (ParsedStarCrumb ts1 (t':ts2)):z) = Just (t', ParsedStarCrumb (t:ts1) ts2:z)
@@ -102,6 +135,12 @@ goLeft (ParsedSeq t1 t2, z)                  = Just (t1, ParsedSeqFirst t2:z)
 goLeft (ParsedIndent t ts, z)                = Just (t, ParsedIndentFirst ts:z)
 goLeft _                                     = Nothing
 
+{-|
+Move the focus right within the current zipper context.
+
+This is valid for star lists, sequence nodes, and indent nodes where a
+right sibling exists.
+-}
 goRight :: ParsedTreeZipper -> Maybe ParsedTreeZipper
 goRight (_, (ParsedStarCrumb [] _):_)         = Nothing
 goRight (t, (ParsedStarCrumb (t':ts1) ts2):z) = Just (t', ParsedStarCrumb ts1 (t:ts2):z)
@@ -109,6 +148,12 @@ goRight (ParsedSeq t1 t2, z)                  = Just (t2, ParsedSeqSecond t1:z)
 goRight (ParsedIndent t ts, z)                = Just (ParsedStar ts, ParsedIndentSecond t:z)
 goRight _                                     = Nothing
 
+{-|
+Pull the first element from the right side of a sequence and append it to
+its left side.
+
+If the provided tree is not a sequence, this returns 'Nothing'.
+-}
 pullFromRight :: ParsedTree -> Maybe ParsedTree
 pullFromRight (ParsedSeq t1 t2) = maybe (Just t1') (Just . ParsedSeq t1') tT
     where
@@ -202,6 +247,12 @@ flatten = everything (++) ("" `mkQ` term)
         term (ParsedT (T t)) = t
         term _ = ""
 
+{-|
+Check whether a 'ParsedTree' corresponds to a given grammar expression.
+
+The function follows the structure of the expression and compares it with the
+parsed tree, resolving non-terminals using the provided grammar.
+-}
 ofExpression :: Grammar -> Expression -> ParsedTree -> Bool
 ofExpression _ Empty ParsedEpsilon = True
 ofExpression _ (ExprT t) (ParsedT t') = t == t'

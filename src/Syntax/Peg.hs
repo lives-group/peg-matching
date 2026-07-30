@@ -64,6 +64,12 @@ data Expression
     | Indent Expression Expression
     deriving (Show, Eq, Ord, Typeable, Data)
 
+{-|
+Breadcrumbs used when navigating an 'Expression' tree with a zipper.
+
+Each constructor stores the sibling or parent context needed to reconstruct
+the tree when moving back up.
+-}
 data ExpressionCrumb
     = SequenceFirst Expression
     | SequenceSecond Expression
@@ -75,10 +81,21 @@ data ExpressionCrumb
     | NotCrumb
     | FlattenCrumb
 
+{-|
+A zipper path is the stack of breadcrumbs from the current focus back up to
+the root.
+-}
 type ExpressionPath = [ExpressionCrumb]
 
+{-|
+A zipper for an 'Expression'. The first component is the currently focused
+expression, and the second is the path back to the root.
+-}
 type ExpressionZipper = (Expression, ExpressionPath)
 
+{-|
+Move the focus of an 'ExpressionZipper' up to its parent expression.
+-}
 goUp :: ExpressionZipper -> Maybe ExpressionZipper
 goUp (e1, SequenceFirst e2:z)  = Just (Sequence e1 e2, z)
 goUp (e2, SequenceSecond e1:z) = Just (Sequence e1 e2, z)
@@ -91,24 +108,37 @@ goUp (e1, NotCrumb:z)          = Just (Not e1, z)
 goUp (e1, FlattenCrumb:z)      = Just (Flatten e1, z)
 goUp (_, [])                   = Nothing
 
+{-|
+Move the focus to the right child of the current expression node, if any.
+-}
 goRight :: ExpressionZipper -> Maybe ExpressionZipper
 goRight (Sequence e1 e2, z) = Just (e2, SequenceSecond e1:z)
 goRight (Choice e1 e2, z)   = Just (e2, ChoiceSecond e1:z)
 goRight (Indent e1 e2, z)   = Just (e2, IndentSecond e1:z)
 goRight _                   = Nothing
 
+{-|
+Move the focus to the left child of the current expression node, if any.
+-}
 goLeft :: ExpressionZipper -> Maybe ExpressionZipper
 goLeft (Sequence e1 e2, z) = Just (e1, SequenceFirst e2:z)
 goLeft (Choice e1 e2, z)   = Just (e1, ChoiceFirst e2:z)
 goLeft (Indent e1 e2, z)   = Just (e1, IndentFirst e2:z)
 goLeft _                   = Nothing
 
+{-|
+Move the focus down into a nested single-child expression.
+-}
 goDown :: ExpressionZipper -> Maybe ExpressionZipper
 goDown (Star e, z)    = Just (e, StarCrumb:z)
 goDown (Not e, z)     = Just (e, NotCrumb:z)
 goDown (Flatten e, z) = Just (e, FlattenCrumb:z)
 goDown _              = Nothing
 
+{-|
+Pull the leftmost element from the right operand of a sequence and append it
+onto the left operand.
+-}
 pullFromRight :: Expression -> Maybe Expression
 pullFromRight (Sequence e1 e2) = maybe (Just e1') (Just . Sequence e1') eT
     where

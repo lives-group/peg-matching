@@ -19,6 +19,12 @@ import qualified Parser.Peg as Peg
 import Language.Haskell.TH (runIO)
 import Language.Haskell.TH.Quote (dataToExpQ, QuasiQuoter(..))
 
+{-|
+QuasiQuoter for PEG grammar syntax.
+
+Parses a grammar string at compile time and converts it into a Template
+Haskell expression.
+-}
 grammar :: QuasiQuoter
 grammar = QuasiQuoter {
         quoteExp = \ str -> do
