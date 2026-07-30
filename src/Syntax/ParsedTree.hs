@@ -1,9 +1,9 @@
 {-|
 Module      : Syntax.ParsedTree
 Description : Representation of parsed trees.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -14,6 +14,8 @@ It also provides an instance of the 'Pretty' class for formatted printing.
 module Syntax.ParsedTree
     ( ParsedTree(..)
     , ParsedTreeZipper
+    , ParsedTreePath
+    , ParsedTreeCrumbs
     , flatten
     , goUp
     , goDown

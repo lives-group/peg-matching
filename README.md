@@ -1,6 +1,9 @@
-# syntax-pattern
+# peg-matching
 
-**syntax-pattern** is a Haskell library for parsing, analyzing, matching, and 
+[![CI](https://github.com/lives-group/peg-matching/actions/workflows/ci.yml/badge.svg)](https://github.com/lives-group/peg-matching/actions/workflows/ci.yml)
+[![Hackage](https://img.shields.io/hackage/v/peg-matching.svg)](https://hackage.haskell.org/package/peg-matching)
+
+**peg-matching** is a Haskell library for parsing, analyzing, matching, and 
 rewriting syntax trees using Parsing Expression Grammars (PEGs) and user-defined 
 patterns. It is designed for research and experimentation with syntax-driven 
 transformations and pattern matching in abstract syntax trees (ASTs).
@@ -54,13 +57,35 @@ test/
 
 ## Getting Started
 
+### Installation
+
+`peg-matching` is published on
+[Hackage](https://hackage.haskell.org/package/peg-matching). To use it in your
+own project, add it to the `build-depends` of your `.cabal` file:
+
+```cabal
+build-depends:
+    base >=4.17 && <5
+  , peg-matching >=0.1 && <0.2
+```
+
+Or install it directly:
+
+```bash
+cabal update
+cabal install --lib peg-matching
+```
+
+The sections below are for building this repository from source, which you only
+need if you intend to work on the library itself.
+
 ### Prerequisites
 
 You may build the project either locally or using Docker.
 
 #### Local environment
 
-- [GHC](https://www.haskell.org/ghc/) (>= 8.10)
+- [GHC](https://www.haskell.org/ghc/) (>= 9.4)
 - [Cabal](https://www.haskell.org/cabal/), or [Stack](https://docs.haskellstack.org/en/stable/)
 
 #### Docker environment

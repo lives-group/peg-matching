@@ -1,9 +1,9 @@
 {-|
 Module      : Parser.Pattern
 Description : Parser for syntactic patterns in grammars.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -30,7 +30,7 @@ import Control.Monad.Combinators.Expr (Operator(Postfix, Prefix), makeExprParser
 {-|
 Parser for a list of patterns.
 
-Each pattern is preceded by the keyword `pattern` and associated with a name.
+Each pattern is preceded by the keyword @pattern@ and associated with a name.
 
 @since 1.0.0
 -}
@@ -66,7 +66,7 @@ A primary expression can be:
 - A terminal.
 - A pattern variable.
 - A reference to a named pattern.
-- The empty symbol ('ε').
+- The empty symbol (@ε@).
 
 @since 1.0.0
 -}
@@ -103,7 +103,7 @@ sequence = foldr1 SynSeq <$> some prefix
 {-|
 Parser for a non-terminal associated with a pattern.
 
-A non-terminal is followed by the `:=` operator and an expression.
+A non-terminal is followed by the @:=@ operator and an expression.
 
 @since 1.0.0
 -}
@@ -138,7 +138,7 @@ patVar = f <$> char '#' <*> identifier <*> char ':' <*> Peg.primary <?> "pattern
 {-|
 Parser for a reference to a named pattern.
 
-A reference is preceded by the `@` character and followed by the pattern name.
+A reference is preceded by an at sign (@\@@) and followed by the pattern name.
 
 @since 1.0.0
 -}
@@ -148,7 +148,7 @@ reference = f <$> char '@' <*> identifier <?> "pattern name"
         f _ = SynRef
 
 {-|
-Parser for the empty symbol ('ε').
+Parser for the empty symbol (@ε@).
 
 @since 1.0.0
 -}
@@ -159,11 +159,11 @@ epsilon = SynEpsilon <$ symbol "ε"
 Parser for expressions with prefix and suffix operators.
 
 The available operators are:
-- `*`: Repetition zero or more times ('SynStar', 'PatStar').
-- `+`: Repetition one or more times (`SynSeq e (SynStar e)`, `PatSeq e (PatStar e)`).
-- `?`: Optional (`SynChoice e SynEpsilon`, `PatChoice e PatEpsilon`).
-- `!`: Negation ('SynNot', 'PatNot').
-- `&`: And (`SynNot . SynNot`, `PatNot . PatNot`).
+- @*@: Repetition zero or more times ('Syntax.Pattern.SynStar', 'Syntax.Pattern.PatStar').
+- @+@: Repetition one or more times (@SynSeq e (SynStar e)@, @PatSeq e (PatStar e)@).
+- @?@: Optional (@SynChoice e SynEpsilon@, @PatChoice e PatEpsilon@).
+- @!@: Negation ('Syntax.Pattern.SynNot', 'Syntax.Pattern.PatNot').
+- @&@: And (@SynNot . SynNot@, @PatNot . PatNot@).
 
 @since 1.0.0
 -}
@@ -221,7 +221,7 @@ Returns an 'Either' containing the parser result or a parsing error.
 Right [("A",SynNT (NT "S") (SynChoice (SynT (T "a")) (SynT (T "b"))))]
 
 >>> parsePatterns "pattern B : S := #x:T"
-Right [("B",SynNT (NT "S") (SynVar (Left (NT "T")) "x"))]
+Right [("B",SynNT (NT "S") (SynVar (ExprNT (NT "T")) "x"))]
 
 >>> parsePatterns "invalid"
 Left ...

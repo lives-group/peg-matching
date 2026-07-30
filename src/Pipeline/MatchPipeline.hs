@@ -1,9 +1,9 @@
 {-|
 Module      : Pipeline.MatchPipeline
 Description : Functions for processing grammars, patterns, and ASTs.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -11,7 +11,36 @@ This module provides functions for processing PEGs, patterns, and ASTs.
 It includes grammar and pattern validation, pattern matching, subtree capturing, and AST rewriting.
 It also provides auxiliary functions for file input and output.
 -}
-module Pipeline.MatchPipeline (module Pipeline.MatchPipeline) where
+module Pipeline.MatchPipeline
+    ( PrettyError
+      -- * Pipelines over strings
+    , parseValidGrammar
+    , parseValidPatterns
+    , parseCorrectPatterns
+    , parseFile
+    , parseMatch
+    , parseMatch1
+    , parseCapture
+    , parseCapture1
+    , parseRewrite
+    , parseCallGraph
+      -- * Pipelines over files
+      --
+      -- | These read their inputs from disk and print the result.
+    , parseGrammarIO
+    , parseValidGrammarIO
+    , parsePatternsIO
+    , parsePatApply
+    , parseValidPatternsIO
+    , parseCorrectPatternsIO
+    , parseFileIO
+    , parseMatchIO
+    , parseMatch1IO
+    , parseCaptureIO
+    , parseCapture1IO
+    , parseRewriteIO
+    , parseCallGraphIO
+    ) where
 
 import Syntax.Base (Pretty(pPrint))
 import Syntax.Peg (Grammar)
@@ -30,9 +59,16 @@ import Data.Bifunctor (Bifunctor(first, bimap, second))
 import Data.Foldable (find)
 import Data.Maybe (mapMaybe)
 import Data.List (nub)
-import qualified Quote.Peg as QPeg
-import qualified Quote.Pattern as QPattern
 
+{-|
+An error already rendered as human-readable text.
+
+The functions in this module report failures this way so that parse errors and
+semantic errors, which have unrelated representations, can share a single return
+type.
+
+@since 1.0.0
+-}
 type PrettyError = String
 
 {-|
@@ -436,40 +472,3 @@ parseCallGraphIO grammarFile patternFile inputFile pat1 pat2 = do
     case parseCallGraph contentsG contentsP contentsF pat1 pat2 of
         Left e -> putStrLn e
         Right t -> putStrLn $ concat . nub $ map (\ (x, y) -> flatten x ++ " -> " ++ flatten y ++ "\n") t
-
-{-|
-A sample grammar for arithmetic expressions used in examples and tests.
-
-This grammar is the same as the one in `input/peg/expression.peg`.
--}
-testGrammar :: Grammar
-testGrammar = [QPeg.grammar|
-    E <- T ("+" T)*
-    T <- F ("*" F)* 
-    F <- n / "(" E ")"
-    ^n <- [0-9]+
-    |]
-
-{-|
-A sample grammar for palindrome-like strings used in examples and tests.
-
-This grammar is the same as the one in `input/peg/wiki.peg`.
--}
-testGrammar2 :: Grammar
-testGrammar2 = [QPeg.grammar|
-    S <- "x" S "x" / "x"
-    |]
-
-{-|
-A sample set of named syntactic patterns used in examples and tests.
-
-These patterns are the same as the ones in `input/pattern/call_graph.pat`.
--}
-testPattern :: [NamedSynPat]
-testPattern = [QPattern.patterns|
-    pattern call : function_call := #name:identifier @space "(" @space #v:(expr_list?) ")" ε
-
-    pattern definition : function_def := ("def" @space #name:identifier "(" @space #p:(id_list?) ")" @space ":") #block:(statement*)
-
-    pattern space : space := " "*
-    |]

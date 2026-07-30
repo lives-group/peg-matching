@@ -4,9 +4,9 @@
 {-|
 Module      : Match.Capture
 Description : Functions for matching and capturing patterns in syntax trees.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -29,13 +29,20 @@ import Data.Maybe (isJust)
 Checks if a pattern ('Pattern') matches an AST ('ParsedTree').
 
 The 'match'' function traverses the tree and checks if the structure and values match the given pattern.
+Matching is anchored at the focus of the zipper: it does not search the subtrees.
+On success it returns the bindings produced by the variables ('PatVar') of the pattern.
+
+The grammar is consulted only to resolve the expression of a 'PatVar', via 'ofExpression'.
 
 === Usage examples:
->>> match' (PatT (T "a")) (ParsedT (T "a"))
-True
 
->>> match' (PatT (T "a")) (ParsedT (T "b"))
-False
+>>> let g = ([(NT "S", Sequence (ExprT (T "a")) (ExprT (T "b")))], NT "S")
+
+>>> match' g (PatT (T "a")) (ParsedT (T "a"), [])
+Just []
+
+>>> match' g (PatT (T "a")) (ParsedT (T "b"), [])
+Nothing
 
 @since 1.0.0
 -}
@@ -78,13 +85,19 @@ match' _ _                    _                          =
 {-|
 Checks if a pattern ('Pattern') matches any subtree of an AST ('ParsedTree').
 
-=== Usage examples:
+Unlike 'match'', which is anchored at the root, this function applies 'match'' to
+every subtree and succeeds if any of them matches.
 
 === Usage examples:
->>> match (PatT (T "a")) (ParsedT (T "a"))
+
+>>> let g = ([(NT "S", Sequence (ExprT (T "a")) (ExprT (T "b")))], NT "S")
+
+>>> match g (PatT (T "a")) (ParsedT (T "a"))
 True
 
->>> match (PatT (T "a")) (ParsedSeq (ParsedT (T "a")) (ParsedT (T "b")))
+The pattern needs to match only a subtree, not the whole tree:
+
+>>> match g (PatT (T "a")) (ParsedSeq (ParsedT (T "a")) (ParsedT (T "b")))
 True
 
 @since 1.0.0
@@ -95,19 +108,19 @@ match g p = everything (||) (False `mkQ` (isJust . match' g p . (, [])))
 {-|
 Captures all subtrees of an AST ('ParsedTree') that match a variable ('PatVar').
 
-The 'capture' function uses 'match'' to verify matches and 'collect' to capture the subtrees.
+The 'capture' function applies 'match'' to every subtree and concatenates the
+bindings of the matches it finds.
 
 === Usage examples:
 
->>> let pattern = PatSeq (PatT (T "a")) (PatVar (Right (T "b")) "B")
+>>> let g = ([(NT "S", Sequence (ExprT (T "a")) (ExprT (T "b")))], NT "S")
 >>> let tree = ParsedSeq (ParsedT (T "a")) (ParsedT (T "b"))
->>> capture pattern tree
-[[(PatVar (Right (T "b")) "B",ParsedT (T "b"))]]
 
->>> let pattern = (PatVar (Right (T "a")) "A")
->>> let tree = ParsedSeq (ParsedT (T "a")) (ParsedT (T "b"))
->>> capture pattern tree
-[[(PatVar (Right (T "a")) "A",ParsedT (T "a"))]]
+>>> capture g (PatSeq (PatT (T "a")) (PatVar (ExprT (T "b")) "B")) tree
+[[(PatVar (ExprT (T "b")) "B",ParsedT (T "b"))]]
+
+>>> capture g (PatVar (ExprT (T "a")) "A") tree
+[[(PatVar (ExprT (T "a")) "A",ParsedT (T "a"))]]
 
 @since 1.0.0
 -}

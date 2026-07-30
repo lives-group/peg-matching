@@ -1,9 +1,9 @@
 {-|
 Module      : Semantic.Pattern
 Description : Semantic analysis of patterns in PEGs.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -13,6 +13,10 @@ It also defines specific exceptions for semantic errors related to patterns.
 -}
 module Semantic.Pattern
     ( PatternException(..)
+      -- | Payloads carried by the constructors of 'PatternException'.
+    , RefOutOfScopeException(..)
+    , InvalidPatternException(..)
+    , DuplicatePatternException(..)
     , Proof(..)
     , processPats
     , correctPat

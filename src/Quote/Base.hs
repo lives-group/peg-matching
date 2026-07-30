@@ -1,9 +1,9 @@
 {-|
 Module      : Quote.Base
 Description : Base file for QuasiQuoter.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -48,7 +48,7 @@ parseIO p str =
 
 {-|
 Return the current Template Haskell source position as a Megaparsec
-'SourcePos'.
+position, t'Text.Megaparsec.SourcePos'.
 -}
 location' :: Q SourcePos
 location' = aux <$> location
@@ -63,7 +63,7 @@ location' = aux <$> location
             }
 
 {-|
-Set the parser state position to the given 'SourcePos'.
+Set the parser state position to the given t'Text.Megaparsec.SourcePos'.
 -}
 setPosition :: SourcePos -> Parser ()
 setPosition pos = updateParserState $ \state ->

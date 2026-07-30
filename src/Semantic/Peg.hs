@@ -1,9 +1,9 @@
 {-|
 Module      : Semantic.Peg
 Description : Semantic analysis of PEGs (Parsing Expression Grammars).
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -14,6 +14,9 @@ errors in PEGs.
 -}
 module Semantic.Peg
     ( PegException(..)
+      -- | Payloads carried by the constructors of 'PegException'.
+    , RefOutOfScopeException(..)
+    , DuplicateDefinitionException(..)
     , processPeg
     ) where
 
