@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: GHC ${{ matrix.ghc }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Must cover the range declared by the base bound in the .cabal
+        # file (>=4.17 && <5, i.e. GHC 9.4 onwards).
+        ghc: ['9.4', '9.6', '9.8', '9.10']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GHC ${{ matrix.ghc }}
+        id: setup
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: latest
+          cabal-update: true
+
+      - name: Configure
+        run: |
+          cabal configure --enable-tests --enable-documentation
+          cabal build all --dry-run
+
+      - name: Restore cached dependencies
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-${{ hashFiles('dist-newstyle/cache/plan.json') }}
+          restore-keys: ${{ runner.os }}-ghc-${{ steps.setup.outputs.ghc-version }}-
+
+      - name: Install dependencies
+        run: cabal build all --only-dependencies
+
+      - name: Save cached dependencies
+        uses: actions/cache/save@v4
+        if: steps.cache.outputs.cache-primary-key != steps.cache.outputs.cache-matched-key
+        with:
+          path: ${{ steps.setup.outputs.cabal-store }}
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: Build
+        run: cabal build all
+
+      - name: Test
+        run: cabal test all --test-show-details=direct
+
+      - name: Check package metadata
+        run: cabal check
+
+      - name: Haddock
+        run: cabal haddock all
+
+  sdist:
+    name: Build from sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GHC
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.10'
+          cabal-version: latest
+          cabal-update: true
+
+      - name: Create source distribution
+        run: cabal sdist --output-dir "$GITHUB_WORKSPACE/sdist"
+
+      # Builds from the tarball, outside the repository tree. This is what
+      # catches a file missing from extra-source-files, a failure that would
+      # otherwise only show up once published.
+      - name: Unpack and build in isolation
+        run: |
+          mkdir -p "$RUNNER_TEMP/iso"
+          tar xzf "$GITHUB_WORKSPACE"/sdist/*.tar.gz -C "$RUNNER_TEMP/iso"
+          cd "$RUNNER_TEMP"/iso/peg-matching-*
+          cabal check
+          cabal build --enable-tests all
+          cabal test all --test-show-details=direct
+          cabal haddock --haddock-for-hackage --enable-doc

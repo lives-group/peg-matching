@@ -1,9 +1,9 @@
 {-|
 Module      : Syntax.Pattern
 Description : Definitions of patterns and utilities for grammars.
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -99,8 +99,8 @@ type NamedSynPat = (String, SyntaxPattern)
 {-|
 Instance of the 'Pretty' class for 'Pattern'.
 
-Prints the pattern in a readable format, with operators like `/` for choice,
-`*` for repetition, and `!` for negation.
+Prints the pattern in a readable format, with operators like @/@ for choice,
+@*@ for repetition, and @!@ for negation.
 
 @since 1.0.0
 -}
@@ -119,8 +119,8 @@ instance Pretty Pattern where
 {-|
 Instance of the 'Pretty' class for 'SyntaxPattern'.
 
-Prints the syntactic pattern in a readable format, with operators like `/` for choice,
-`*` for repetition, and `!` for negation.
+Prints the syntactic pattern in a readable format, with operators like @/@ for choice,
+@*@ for repetition, and @!@ for negation.
 
 @since 1.0.0
 -}
@@ -139,7 +139,7 @@ instance Pretty SyntaxPattern where
 {-|
 Instance of the 'Pretty' class for 'NamedPattern'.
 
-Prints the named pattern in the format `pattern <name> : <pattern>`.
+Prints the named pattern in the format @pattern \<name\> : \<pattern\>@.
 
 @since 1.0.0
 -}
@@ -150,7 +150,7 @@ instance Pretty NamedPattern where
 {-|
 Instance of the 'Pretty' class for 'NamedSynPat'.
 
-Prints the named syntactic pattern in the format `pattern <name> : <pattern>`.
+Prints the named syntactic pattern in the format @pattern \<name\> : \<pattern\>@.
 
 @since 1.0.0
 -}

@@ -1,9 +1,9 @@
 {-|
 Module      : Syntax.Peg
 Description : Definitions for PEGs (Parsing Expression Grammars).
-Copyright   : (c) Guilherme Drummond, 2025
-License     : MIT
-Maintainer  : guiadnguto@gmail.com
+Copyright   : (c) Guilherme Drummond, Rodrigo Ribeiro, 2025
+License     : BSD-3-Clause
+Maintainer  : rodrigo.ribeiro@ufop.edu.br
 Stability   : experimental
 Portability : POSIX
 
@@ -16,6 +16,8 @@ module Syntax.Peg
     , Definition
     , Grammar
     , ExpressionZipper
+    , ExpressionPath
+    , ExpressionCrumb
     , nonTerminals
     , terminals
     , terminals'
@@ -191,8 +193,8 @@ parensStar _ = False
 {-|
 Instance of the 'Pretty' class for 'Expression'.
 
-Prints the expression in a readable format, with operators like `/` for choice,
-`*` for repetition, and `!` for negation.
+Prints the expression in a readable format, with operators like @/@ for choice,
+@*@ for repetition, and @!@ for negation.
 
 @since 1.0.0
 -}
