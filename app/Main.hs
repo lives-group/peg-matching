@@ -1,4 +1,4 @@
 module Main (main) where
 
 main :: IO ()
-main = putStrLn "Não tá feito"
+main = putStrLn "Not implemented yet"

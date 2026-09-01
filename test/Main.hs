@@ -8,11 +8,12 @@ import Syntax.Pattern
 import Syntax.ParsedTree
 import Parser.Peg
 import Match.Capture
+import Parser.Base (Parser)
 import Parser.Pattern (patterns)
 import qualified Quote.Peg as QPeg
 import qualified Quote.Pattern as QPattern
 
-import Text.Megaparsec (parse, Parsec)
+import Text.Megaparsec (parse, errorBundlePretty)
 
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -22,25 +23,27 @@ main :: IO ()
 main = defaultMain $
         testGroup "Main tests" [testsParserPeg, testsMatch, testsQuote]
 
-parseT :: Parsec e s a -> s -> a
+-- | Run a parser and return its result, aborting the test with the actual
+-- parse error if it fails.
+parseT :: Parser a -> String -> a
 parseT p f = case parse p "" f of
                     Right a -> a
-                    Left _ -> error ""
+                    Left e  -> error (errorBundlePretty e)
 
 testsParserPeg :: TestTree
 testsParserPeg = testGroup "Tests Parser Peg"
     [
-        testCase "peg simples, uma única regra" $
+        testCase "simple peg, a single rule" $
             parseT grammar "A <- \"a\"+"
             @?=
             ([(NT "A",Sequence (ExprT (T "a")) (Star (ExprT (T "a"))))],NT "A")
 
-    ,   testCase "peg para expressões, com NT para número" $
+    ,   testCase "expression peg, with a non-terminal for numbers" $
             parseT grammar "E <- T (\"\\\"\" T)*\nT <- F (\"*\" F)*\nF <- \"num\" / \"(\" E \")\""
             @?=
             ([(NT "E",Sequence (ExprNT (NT "T")) (Star (Sequence (ExprT (T "\"")) (ExprNT (NT "T"))))),(NT "T",Sequence (ExprNT (NT "F")) (Star (Sequence (ExprT (T "*")) (ExprNT (NT "F"))))),(NT "F",Choice (ExprT (T "num")) (Sequence (ExprT (T "(")) (Sequence (ExprNT (NT "E")) (ExprT (T ")")))))],NT "E")
 
-    ,   testCase "peg para expressões, com range para número" $
+    ,   testCase "expression peg, with a character range for numbers" $
             parseT grammar "E <- T (\"+\" T)*\nT <- F (\"*\" F)*\nF <- [0-9]+ / \"(\" E \")\""
             @?=
             ([
@@ -72,7 +75,8 @@ testsMatch :: TestTree
 testsMatch = testGroup "Tests Match"
     [
         testCase "Match Epsilon" $
-            match matchGrammar PatEpsilon ParsedEpsilon @? ""
+            match matchGrammar PatEpsilon ParsedEpsilon
+            @? "PatEpsilon should match ParsedEpsilon"
 
         -- 'match' searches every subtree, so a nested epsilon is a match.
         -- This test used to assert the opposite, back when 'match' was
@@ -80,17 +84,18 @@ testsMatch = testGroup "Tests Match"
     ,   testCase "Match Nested Epsilon" $
             match matchGrammar
                 PatEpsilon
-                (ParsedSeq ParsedEpsilon (ParsedT (T "teste"))) @? ""
+                (ParsedSeq ParsedEpsilon (ParsedT (T "test")))
+            @? "PatEpsilon should be found in the nested epsilon of the sequence"
     ,   testCase "Match expression tree" $
             match matchGrammar
-                (PatSeq    (PatT    (T "1")) (PatSeq    (PatSeq    (PatT    (T "+")) (PatVar (ExprNT (NT "F")) "Teste"))                                                                  (PatSeq    (PatT    (T "+")) (PatT    (T "4")))))
+                (PatSeq    (PatT    (T "1")) (PatSeq    (PatSeq    (PatT    (T "+")) (PatVar (ExprNT (NT "F")) "Test"))                                                                  (PatSeq    (PatT    (T "+")) (PatT    (T "4")))))
                 (ParsedSeq (ParsedT (T "1")) (ParsedSeq (ParsedSeq (ParsedT (T "+")) (ParsedNT (NT "F") (ParsedSeq (ParsedT (T "2")) (ParsedSeq (ParsedT (T "*")) (ParsedT (T "3")))))) (ParsedSeq (ParsedT (T "+")) (ParsedT (T "4")))))
-            @? ""
+            @? "the variable bound to F should match the 2 * 3 subtree"
     ,   testCase "Match with itself" $
             match matchGrammar
                 (PatSeq    (PatT    (T "1")) (PatSeq    (PatSeq    (PatT    (T "+")) (PatNT    (NT "F") (PatSeq    (PatT    (T "2")) (PatSeq    (PatT    (T "*")) (PatT    (T "3")))))) (PatSeq    (PatT    (T "+")) (PatT    (T "4")))))
                 (ParsedSeq (ParsedT (T "1")) (ParsedSeq (ParsedSeq (ParsedT (T "+")) (ParsedNT (NT "F") (ParsedSeq (ParsedT (T "2")) (ParsedSeq (ParsedT (T "*")) (ParsedT (T "3")))))) (ParsedSeq (ParsedT (T "+")) (ParsedT (T "4")))))
-            @? ""
+            @? "a pattern should match the tree with the same shape"
     ]
 
 -- The values below used to be exported by Pipeline.MatchPipeline as sample

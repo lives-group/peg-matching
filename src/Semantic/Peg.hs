@@ -164,7 +164,7 @@ nullable _ (_, Star _)          = True
 nullable _ (_, Not _)           = True
 nullable _ (_, ExprT _)         = False
 nullable g (nt, ExprNT nt')     = nt == nt'
-                                  || nullable g (nt', fromMaybe (error $ "Error " ++ show nt') (expression g nt'))
+                                  || nullable g (nt', fromMaybe (error $ "Semantic.Peg.nullable: undefined non-terminal " ++ show nt') (expression g nt'))
 nullable g (nt, Sequence e1 e2) = nullable g (nt, e1) && nullable g (nt, e2)
 nullable g (nt, Choice e1 e2)   = nullable g (nt, e1) || nullable g (nt, e2)
 nullable g (nt, Flatten e)      = nullable g (nt, e)

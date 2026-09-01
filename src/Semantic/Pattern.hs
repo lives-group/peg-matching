@@ -323,8 +323,8 @@ checkPat g (PatSeq p1 p2)       z@(Sequence _ _, _) = ProofSeq
                                                         <*> (checkPat g p2 =<< goRight z)
 checkPat g (PatSeq p1 p2)       z@(Indent _ _, _)   = ProofSeq
                                                         <$> (checkPat g p1 =<< goLeft z)
-                                                        -- Esse segundo transforma a expressão em uma estrela
-                                                        -- por causa do jeito que o Indent funciona
+                                                        -- This second one turns the expression into a star,
+                                                        -- because of the way Indent works
                                                         <*> (checkPat g p2 . first Star =<< goRight z)
 checkPat g (PatChoice p1 p2)    z@(Choice _ _, _)   = ProofChoice
                                                         <$> (checkPat g p1 =<< goLeft z)

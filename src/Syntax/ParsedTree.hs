@@ -72,7 +72,7 @@ data ParsedTreeCrumbs
     | ParsedSeqSecond ParsedTree
     | ParsedChoiceLeftCrumb
     | ParsedChoiceRightCrumb
-    | ParsedStarCrumb [ParsedTree] [ParsedTree] -- primeiro é o que falta, segundo é o que já foi
+    | ParsedStarCrumb [ParsedTree] [ParsedTree] -- first list is what remains, second is what has already been visited
     | ParsedIndentFirst [ParsedTree]
     | ParsedIndentSecond ParsedTree
 
@@ -109,8 +109,9 @@ goUp (_, ParsedIndentSecond _:_)             = Nothing
 goUp (_, [])                                 = Nothing
 
 -- TODO:
--- goLeft, goRight e goDown não dão muito bem quando tentam acessar esquerda e direita
--- de uma árvore que está dentro de uma lista, pois a preferência é por andar na lista.
+-- goLeft, goRight and goDown do not behave well when reaching for the left and
+-- right of a tree that sits inside a list, because moving along the list takes
+-- precedence.
 
 {-|
 Move the focus down into a child subtree, when the current focus is a node

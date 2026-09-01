@@ -23,7 +23,7 @@ import Data.Generics (mkT, everywhere)
 import Syntax.Peg (Grammar)
 
 {-|
-Substitui uma subárvore em uma AST ('ParsedTree') com base em uma variável ('PatVar').
+Replaces a subtree of an AST ('ParsedTree') based on a variable ('PatVar').
 
 The 'replace' function checks if a subtree matches a variable and, if so,
 replaces the corresponding subtree with the provided subtree.

@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Deve cobrir o intervalo declarado pelo bound de base no .cabal
-        # (>=4.17 && <5, ou seja, GHC 9.4 em diante).
+        # Must cover the range declared by the base bound in the .cabal
+        # file (>=4.17 && <5, i.e. GHC 9.4 onwards).
         ghc: ['9.4', '9.6', '9.8', '9.10']
 
     steps:
@@ -83,9 +83,9 @@ jobs:
       - name: Create source distribution
         run: cabal sdist --output-dir "$GITHUB_WORKSPACE/sdist"
 
-      # Constroi a partir do tarball, fora da arvore do repositorio. E o que
-      # pega arquivo faltando em extra-source-files, que so aparece depois
-      # de publicado.
+      # Builds from the tarball, outside the repository tree. This is what
+      # catches a file missing from extra-source-files, a failure that would
+      # otherwise only show up once published.
       - name: Unpack and build in isolation
         run: |
           mkdir -p "$RUNNER_TEMP/iso"
