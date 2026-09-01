@@ -27,6 +27,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char (alphaNumChar, char, string)
 import qualified Text.Megaparsec.Char.Lexer as Lexer
 import Control.Monad.Combinators.Expr (Operator(Postfix, Prefix, InfixL), makeExprParser)
+import qualified Control.Monad.Combinators.NonEmpty as NE (some)
+import qualified Data.List.NonEmpty as NE (head, toList)
 
 -------------------------------------------------------------------------------
 --- PEG parser
@@ -40,9 +42,11 @@ The first definition is considered the initial expression of the PEG.
 @since 1.0.0
 -}
 grammar :: Parser Grammar
-grammar = f <$> sc <*> some definition <* eof
+grammar = f <$> sc <*> NE.some definition <* eof
     where
-        f _ d = (d, fst $ head d)
+        -- NE.some yields a NonEmpty, so taking the first definition to be the
+        -- initial non-terminal needs no partial function.
+        f _ ds = (NE.toList ds, fst (NE.head ds))
 
 {-|
 Parser for a definition in a PEG.
